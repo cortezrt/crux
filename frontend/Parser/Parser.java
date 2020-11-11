@@ -1,26 +1,39 @@
 package frontend.Parser;
 
-import frontend.Lexer.Lexer;
-import frontend.SSA.SSAgen;
-
+import frontend.Lexer.*;
+import frontend.util.*;
+import java.util.Hashtable;
 import java.util.ArrayList;
+
 
 public class Parser {
 	ArrayList characters;
-	ArrayList<Lexer.lexeme> tokens;
-	Lexer.lexeme sym;
+	ArrayList<lexeme> tokens;
+	lexeme sym;
 	int cnt;
 	SSAgen out;
+	Lexer L;
+	private Hashtable<Integer, Integer> symbolTable;
 	public Parser(String in) {
 		cnt = 0;
 		out  = new SSAgen();
-		Lexer L = new Lexer(in);
+		L = new Lexer(in);
 		tokens = L.getTokens();
 		sym = tokens.get(0);
+		// associates an identifier ID with an Instruction ID value representing all values o
+		symbolTable = new Hashtable<Integer, Integer>();
 		}
 
+	//declaration-list
 	public void parse() throws Exception {
-		while (!sym.last_sym()) {
+		declaration_list();
+		// emit code
+		System.out.println(symbolTable);
+		out.emit();
+	}
+	public void declaration_list() throws Exception {
+		out.add_block(0);
+		while (!L.last_sym(sym)) {
 			declaration();
 		}
 	}
@@ -36,23 +49,39 @@ public class Parser {
 				array_declaration();
 				break;
 			default:
+				//System.out.println(sym.getName());
 				error("Expected a declaration here!");
 				break;
 		}
 	}
+	private void updateST(Integer IdentifierID, int val) {
+		symbolTable.put(IdentifierID, val);
+	}
 	private void variable_declaration() throws Exception {
 		next();
-		if (sym.isIdentifier())
-			next();
+		// place variable ID on symbol table
+		symbolTable.put(sym.getID(), -1);
 		next();
-		call_expression_list();
+		next();
+		//call_expression_list();
+		next();
 		next();
 	}
 	private void assignment_statement() {
 		next();
+		int identifierID = sym.getID();
 		designator();
 		next();
-		expression0();
+		Result val = expression0();
+		int instructionID;
+		// assigns identifierID to the RHS result (was -1)
+		if (val.getKind() == Result.kind.Constant) {
+			instructionID = out.addConstant(val);
+		}
+		else {
+			instructionID = val.getResult();
+		}
+		updateST(identifierID, instructionID);
 		next();
 	}
 	private void if_statement() throws Exception {
@@ -74,7 +103,7 @@ public class Parser {
 		next();
 	}
 	private void func_definition() throws Exception{
-		if (sym.getName().equals("func")) {
+		if (!sym.getName().equals("func")) {
 			error("invalid func");
 		}
 		next();
@@ -87,7 +116,8 @@ public class Parser {
 		statement_block();
 	}
 	private void consume_parameter_list() throws Exception {
-		if (sym.getName().equals("(")) {
+		if (!sym.getName().equals("(")) {
+			System.out.println(sym.getName());
 			error("expected an open paren at the start of consume parameter list");
 		}
 		next(); // consume open paren
@@ -97,18 +127,19 @@ public class Parser {
 	private void type() {
 		next();
 	}
-	private void statement_block() throws Exception{
+	private void statement_block() throws Exception {
 		next(); // consume curly brace
 		statement_list();
 		next(); // consume curly brace
 	}
 	private void statement_list() throws Exception{
-		while (sym.getName() != "}") {
+		while (!sym.getName().equals("}")) {
 			statement();
 		}
 	}
 	private void statement() throws Exception {
 		//do-stuff
+		//System.out.println(sym.getName());
 		switch (sym.getName()) {
 			case "var":
 				variable_declaration();
@@ -129,19 +160,22 @@ public class Parser {
 				return_statement();
 				break;
 			default:
+				var name = sym.getName();
 				break;
 		}
 	}
 	private void call_statement() {
 		call_expression();
 	}
-	private void call_expression() {
+	// placeholder
+	private Result call_expression() {
 		next(); // consume ::
 		int call_id = sym.getID();
 		next();
 		next(); // consume IDENTIFIER and (
 		call_expression_list();
 		next(); // consume )
+		return new Result();
 
 	}
 	private void call_expression_list() {
@@ -159,77 +193,165 @@ public class Parser {
 		// emit some SSA code here...
 	}
 	// operators
-	private boolean op0()
-	{
+	private int op0() {
 		String token = sym.getName();
-		return token.matches(">=|<=|!=|==|>=|<");
+		switch(token) {
+			case "<=":
+				next();
+				return 44;
+			case ">=":
+				next();
+				return 43;
+			case "!=":
+				next();
+				return 41;
+			case "==":
+				next();
+				return 40;
+			case ">":
+				next();
+				return 45;
+			case "<":
+				next();
+				return 42;
+			default:
+				return -1;
+		}
 	}
-	private boolean op1() {
+	private int op1() {
 		String token = sym.getName();
-		return token.matches("+|-|or");
+		switch (token) {
+			case "+":
+				next();
+				return 0;
+			case "-":
+				next();
+				return 1;
+			case "or":
+				next();
+				return 8;
+			default:
+				//next();
+				return -1;
+		}
 	}
-	private boolean op2() {
-		return sym.getName().matches("*|/|and");
+	private int op2() {
+		var token = sym.getName();
+		switch (token) {
+			case "*":
+				next();
+				return 2;
+			case "/":
+				next();
+				return 3;
+			case "and":
+				next();
+				return 9;
+			default:
+				return -1;
+		}
 	}
 	// Numerical Expression parsing
-	void expression0(){
-		expression1();
-		next(); // move to next token
-		if (op0()) {
-			expression1();
+
+	Result compute_result(Result left, Result right, int operator) {
+		if (out.isCompileTimeOperation(left, right)) {
+			// if both operands are constants, do the compile time operation and return as a constant
+			return out.doCompileTimeOperation(operator, left, right);
+		}
+		else {
+			// if either operand is a variable or register, emit SSA IR
+			int temp = out.add_instruction(operator, left, right);
+			return new Result(left.getKind(), temp);
 		}
 	}
-	void expression1() {
-		expression2();
-		next();
-		while (op1()) {
-			expression2();
+	Result expression0(){
+		Result left = expression1();
+		int op = op0();
+		if ( op != -1) {
+			Result right = expression1();
+			left = compute_result(left, right, op);
 		}
+		return left;
 	}
-	void expression2() {
-		expression3();
-		next();
-		while (op2()) {
-			expression3();
+	Result expression1() {
+		Result left = expression2();
+		int op = op1();
+		while (op != -1) {
+			var right = expression2();
+			left = compute_result(left, right, op);
+			op = op1();
 		}
+		return left;
 	}
-	void expression3() {
+	Result expression2() {
+		Result left = expression3();
+		int op = op2();
+		while (op != -1) {
+			var right = expression3();
+			left = compute_result(left, right, op);
+			op = op2();
+		}
+		return left;
+	}
+	Result expression3() {
+		Result left;
 		switch (sym.getName()) {
 			case "not":
+				// add a case in compute_result for the "not" case (opcode 200)
+				// ... ignoring for now b/c booleans not tested
 				next();
-				expression3();
+				left = expression3();
+				//left.negate();
 				break;
 			case "(":
 				next();
-				expression0();
+				left = expression0();
 				next();
 				break;
 			case "::":
-				call_expression();
+				return call_expression();
 			default:
 				if (sym.isIdentifier()) {
-					designator();
-				}
+					left = designator();
+					}
 				else {
-					literal();
+					left = literal();
 				}
 				break;
 		}
+		return left;
 	}
-	void designator() {
-		if (sym.isIdentifier())
-			next();
+	Result designator() {
+		String name = sym.getName();
+		int identifierID = sym.getID();
+		next();
+		// arrays and results are mean mean things that you must fix
 		while (sym.getName().equals("[")) {
+			next();
 			expression0();
 			next();
 		}
+		// must map
+ 		int IID =  symbolTable.get(identifierID);
+		return new Result(Result.kind.Variable, IID);
 	}
-	void literal() {
+	Result literal() {
+		String token = sym.getName();
 		next();
+		switch(token.toLowerCase()) {
+			case "true":
+				return new Result(Result.kind.Constant, 1);
+			case "false":
+				return new Result(Result.kind.Constant, 0);
+			default:
+				return new Result(Result.kind.Constant, Integer.parseInt(token));
+		}
 	}
 
 	void next() {
 		cnt++;
+		if (cnt == tokens.size())
+			return;
 		sym = tokens.get(cnt);
 	}
 	void error(String msg) throws Exception {
