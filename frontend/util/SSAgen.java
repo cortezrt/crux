@@ -27,7 +27,7 @@ public class SSAgen {
             basicBlocks.get(current_block_id).link_block(basic_block_id);
         return basic_block_id;
     }
-    // Should the parser be able to parse results?
+
     public String parseResult(Result r) {
         if (r == null) return "";
         String result = Integer.toString(r.getResult());
@@ -45,10 +45,10 @@ public class SSAgen {
         I.constant(constant.getResult());
         return current_block.add_instr(I);
     }
-    public int add_instruction(int instr, Result operand_1, Result operand_2) {
-        // if both operands are constants - do the operation at compile time
-        String left = parseResult(operand_1);
-        String right = parseResult(operand_2);
+
+    public int add_instruction(int instr, Result op1, Result op2) {
+        String left = parseResult(op1);
+        String right = parseResult(op2);
         Instruction I = new Instruction();
         switch(instr) {
             /*

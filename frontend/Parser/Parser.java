@@ -261,7 +261,8 @@ public class Parser {
 		else {
 			// if either operand is a variable or register, emit SSA IR
 			int temp = out.add_instruction(operator, left, right);
-			return new Result(left.getKind(), temp);
+			Result.kind kind = Result.findReturnKind(operator, left, right);
+			return new Result(kind, temp);
 		}
 	}
 	Result expression0(){

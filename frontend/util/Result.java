@@ -51,6 +51,11 @@ public class Result{
                 break;
         }
     }
+    // will find the return kind of two Results and one instr
+    public static kind findReturnKind(int instr, Result left, Result right) {
+        // placeholder - will revisit once I implement arrays.
+        return (left.getKind() == Result.kind.Constant? right.getKind() : left.getKind());
+    }
     public void negate() {
         if (val == 0) val = 1;
         else val = 0;
