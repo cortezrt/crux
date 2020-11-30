@@ -1,4 +1,4 @@
-package frontend.util;
+package util;
 
 public class Instruction {
     private String out;

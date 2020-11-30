@@ -1,4 +1,4 @@
-package frontend.util;
+package util;
 
 public class Result{
     public enum kind{

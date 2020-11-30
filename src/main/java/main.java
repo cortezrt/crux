@@ -1,5 +1,5 @@
-import frontend.Lexer.*;
-import frontend.Parser.*;
+import Lexer.*;
+import Parser.*;
 
 public class main {
     public static void main(String[] args) throws Exception {

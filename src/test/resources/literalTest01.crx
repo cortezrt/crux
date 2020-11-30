@@ -1,0 +1,6 @@
+var a : int;
+
+func main(): void {
+    let a = 3;
+    let a = a + 7;
+}

@@ -1,4 +1,4 @@
-package frontend.Lexer;
+package Lexer;
 import java.util.Arrays;
 import java.util.Hashtable;
 

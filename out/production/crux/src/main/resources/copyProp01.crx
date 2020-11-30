@@ -1,0 +1,10 @@
+var x : int;
+var z : int;
+
+func main() : void {
+    let x = 90;
+    let z = x;
+    let x = x + z;          
+    let z = 1 + x;         
+    let x = 5 * 3 + 4 * 2;
+}

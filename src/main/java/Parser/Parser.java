@@ -1,7 +1,7 @@
-package frontend.Parser;
+package Parser;
 
-import frontend.Lexer.*;
-import frontend.util.*;
+import Lexer.*;
+import util.*;
 import java.util.Hashtable;
 import java.util.ArrayList;
 
