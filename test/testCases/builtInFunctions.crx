@@ -1,5 +1,0 @@
-var a : int;
-func main () : void {
-    let a = ::readInt();
-    ::printInt(a);
-}

@@ -1,7 +1,0 @@
-// no else false
-
-func main() : void {
-  if (false) {
-    ::printInt(5);
-  }
-}
