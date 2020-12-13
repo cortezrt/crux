@@ -1,0 +1,8 @@
+var a: bool;
+var b: bool;
+var c: bool;
+func main() : void {
+	let a = 2<=3;
+	let b = 2<3;
+	let c = ::someFunction();
+}

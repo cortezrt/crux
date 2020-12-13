@@ -22,14 +22,21 @@ public class lexeme {
         initialize_identifier_table();
         findID();
     }
+    // only used for teseting purposes
+    public lexeme(String s) {
+        name = s;
+        // implement a mechanism for holding an IID value
+        initialize_identifier_table();
+        findID();
+    }
 
     public boolean isIdentifier() {
         // it is an identifier if it does not start with a digit and is not a reserved keyword
-        return !name.matches("^[0-9]") && id >= reserved.length;
+        return !name.matches("^[0-9].*") && id >= reserved.length;
         //return !Arrays.asList(reserved).contains(name.toUpperCase()) && !name.matches("^[0-9] | TRUE | FALSE");
     }
 
-    private boolean isReserved() {
+    public boolean isReserved() {
         for (int i = 0; i < reserved.length; ++i) {
             var upper = name.toUpperCase();
             if (upper.equals(reserved[i]))

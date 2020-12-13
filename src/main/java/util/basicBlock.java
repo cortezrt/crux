@@ -20,6 +20,10 @@ public class basicBlock {
             current.printInstr();
         }
     }
+    // retrieve instruction at index of block
+    public Instruction getInstruction(int index){
+        return scopedInstructions.get(index);
+    }
     public int add_instr(Instruction candidate_instruction) {
         for (int i = 0; i < scopedInstructions.size(); ++i) {
             Instruction test = scopedInstructions.get(i);

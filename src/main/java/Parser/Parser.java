@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 
 public class Parser {
-	ArrayList characters;
 	ArrayList<lexeme> tokens;
 	lexeme sym;
 	int cnt;
@@ -29,6 +28,8 @@ public class Parser {
 		declaration_list();
 		// emit SSA
 		System.out.println(symbolTable);
+	}
+	public void emitSSA() {
 		out.emit();
 	}
 	public void declaration_list() throws Exception {
@@ -176,6 +177,7 @@ public class Parser {
 		next();
 		next(); // consume IDENTIFIER and (
 		ArrayList<Result> operands = call_expression_list();
+		// print is a void fn - no need to return a valid result.
 		switch (funcName) {
 			case "println":
 				out.add_instruction(6,null,null);
@@ -186,7 +188,7 @@ public class Parser {
 				break;
 			case "printint":
 				out.add_instruction(4, operands.get(0), null);
-				break;	// print is a void fn - no need to return a valid result.
+				break;
 			default:	// implement user defined functions & printBool
 				ans = new Result();
 				break;

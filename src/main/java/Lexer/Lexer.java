@@ -11,7 +11,7 @@ public class Lexer {
 								">=", "<=", "!=", "==", ">", "<", "=", ",",
 								";", ":", "::"};
 	// static integer where an identifier will "start" at - incremented every time an ID is added
-	static int lexeme_count = 0;
+	int lexeme_count = 0;
 
 	ArrayList<Character> characters;
 	public ArrayList<lexeme> tokens;
@@ -35,7 +35,6 @@ public class Lexer {
 		}
 		findLexemes();
 	}
-
 	public ArrayList<lexeme> getTokens() {return tokens;}
 
 
@@ -49,29 +48,49 @@ public class Lexer {
 			System.out.println(tokens.get(i).getName());
 		}
 	}
+	private int ignoreComment(int i) {
+		while (characters.get(i) != '\n') {
+			++i;
+		}
+		return i;
+	}
+
+	private boolean shouldDelimitSpecialChar(char currentChar, String lexString) {
+		// we delimit by special characters when currentChar is a special char and our current lexString does not demand that we lookAhead to the currentChar
+		return Arrays.asList(special).contains(Character.toString(currentChar)) && !lookAhead(currentChar, lexString);
+	}
 	private void findLexemes() {
 		String lexString = "";
 		int i;
 		for (i = 0; i < characters.size(); ++i) {
 			char currentChar = characters.get(i);
+			// ignores any commented lines by moving character index i to next line
+			if (currentChar == '/' && characters.get(i+1) == '/') {
+				i = ignoreComment(i);
+				continue;
+			}
 			// delimits lexemes by spaces, new lines, and tabs
 			if (currentChar == ' ' || currentChar == '\n' || currentChar == '\t') {
 				add_lexeme(lexString);
 				lexString = "";
 			}
-			// Rather convoluted - If the current lexString is in the special or reserved list, we should add lexString as a lexeme and create a new lexString of the currentChar
-			// Furthermore, if the current character is a special character (third boolean statement in the else if), we treat is as a delimiter - adding lexString as a lexeme and creating a new lexString
-			// While the above two are separate cases, they contain identical code solutions (lookAhead will return false for all non-special lexStrings)
-			else if (Arrays.asList(special).contains(lexString) || Arrays.asList(reserved).contains(lexString) || Arrays.asList(special).contains(Character.toString(currentChar))) {
+			else if (Arrays.asList(reserved).contains(lexString) || shouldDelimitSpecialChar(currentChar, lexString)) {
+				add_lexeme(lexString);
+				lexString = Character.toString(currentChar);
+			}
+
+			else if (Arrays.asList(special).contains(lexString)) {
 				if (lookAhead(currentChar, lexString)) {
 					lexString += currentChar;
+					add_lexeme(lexString);
+					lexString = "";
 				}
+				// don't need to look ahead to next char - add lexeme and set lexString to currentChar
 				else {
 					add_lexeme(lexString);
 					lexString = Character.toString(currentChar);
 				}
 			}
-			// aggregate lexString char by char
 			else
 				lexString += currentChar;
 			}

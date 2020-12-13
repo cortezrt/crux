@@ -13,6 +13,9 @@ public class Instruction {
         System.out.print(Integer.toString(instruction_id) + ": ");
         System.out.print(out);
     }
+    public String getInstrString() {
+        return out;
+    }
     public int getIID() { return instruction_id;}
     public boolean equivalentInstruction(Instruction candidate) {
         return out.equals(candidate.out);

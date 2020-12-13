@@ -6,7 +6,7 @@ public class SSAgen {
     static int basic_block_id;
     static int instr_cnt;
     static ArrayList<basicBlock> basicBlocks;
-    static basicBlock current_block;
+    static public basicBlock current_block;
 
     //variableMap maps String instructions to IIDs
     public SSAgen() {
@@ -123,6 +123,8 @@ public class SSAgen {
                 val = -1;
                 break;
         }
-        return new Result(Result.kind.Constant, val);
+        Result r = new Result(Result.kind.Constant, val);
+        addConstant(r);
+        return r;
     }
 }
